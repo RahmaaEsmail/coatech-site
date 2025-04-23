@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+:root {
+  /* --main-red-color:#de3f3f; */
+  --main-red-color:#E82F3C;
+  --main-blue-color:rgba(9,33,67,1);
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap:6px;
+
+  label {
+    font-size: 16px;
+    font-weight: 500;
+  }
+}
+
+select , input , textarea {
+  border-radius: 5px;
+  padding:10px 7px;
+  border:1px solid #c8c7c7;
+  outline: none;
+}
+
+select:focus ,
+input:focus ,
+textarea:focus {
+  border: 1.5px solid var(--main-red-color) ;
+}
+
+
+.PhoneInputInput {
+  border: 0px;
+  outline: none;
+}
+
+input:disabled ,
+select:disabled ,
+textarea:disabled {
+  background-color: rgba(128, 128, 128, 0.338);
+}
+
+.PhoneInputInput:focus {
+  border: 0px;
+}
+
+.PhoneInputInput:focus .phone-input {
+  border: 1.5px solid var(--main-red-color) ;}
