@@ -3,50 +3,59 @@ import { FaAnglesLeft, FaAnglesRight } from "react-icons/fa6";
 import { toast } from "react-toastify";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import { useDispatch, useSelector } from "react-redux";
+import { handleCheckEmail } from "../../features/authSlice";
 
 
 export default function UserForm({ activeStep, setActiveStep }) {
   const userData =
   JSON.parse(localStorage?.getItem("COATECH_USER_DATA")) || null;
-
+  const dispatch = useDispatch();
+  const {data , isLoading} = useSelector(state => state?.auth);
+  const [userExist , setUserExist] = useState(null);
   const [formData, setFormData] = useState({
-    email: userData?.email,
-    password: userData?.password,
-    phone: userData?.phone,
-    company_name: userData?.company_name,
-    notes: userData?.notes,
-    address: userData?.address,
-    city: userData?.city,
-    region: userData?.region,
+    email: "",
+    password: "",
+    phone: "",
+    user_name:"",
+    company_name: "",
+    notes: "",
+    address: "",
+    city:"",
+    region:"",
   });
+
+  const handleEmailBlur = async () => {
+    if (!formData.email) return;
+  
+    try {
+      const res = await dispatch(handleCheckEmail({ body: { email: formData.email } })).unwrap();
+      if (res?.message === "Found") {
+        setUserExist(true);
+      } else {
+        setUserExist(false);
+      }
+    } catch (err) {
+      toast.error("Error checking email");
+      setUserExist(null);
+    }
+  };
+  
 
   function handleSubmit(e) {
     e.preventDefault();
-
-    if (!formData.email || !formData.password) {
-      toast.warn("Please fill in all required fields");
+  
+    if (!formData.email) {
+      toast.warn("Please fill in  email field");
       return;
     }
 
-    if (userData?.email === formData?.email) {
-      toast.success("Your Email Already Exists, Login Successful");
-      return;
-    }
-
+  
     localStorage.setItem("COATECH_USER_DATA", JSON.stringify(formData));
-    toast.success("Account Created Successfully");
-
-    setFormData({
-      email: "",
-      password: "",
-      phone: "",
-      company_name: "",
-      notes: "",
-      address: "",
-      city: "",
-      region: "",
-    });
+    // toast.success("Account Created Successfully");
+    setActiveStep((prev) => prev + 1);
   }
+  
 
   return (
     <div className="my-6">
@@ -74,7 +83,20 @@ export default function UserForm({ activeStep, setActiveStep }) {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="w-full mt-5 grid grid-cols-2 gap-4">
+      <div className="w-full mt-5 grid grid-cols-2 gap-4">
+      <div className="input-group">
+          <label>
+            User Name<span className="text-red-600"></span>
+          </label>
+          <input
+            value={formData.user_name}
+            onChange={(e) =>
+              setFormData({ ...formData, user_name: e.target.value })
+            }
+            type="email"
+          />
+        </div>
+
         <div className="input-group">
           <label>
             Email<span className="text-red-600">*</span>
@@ -84,11 +106,12 @@ export default function UserForm({ activeStep, setActiveStep }) {
             onChange={(e) =>
               setFormData({ ...formData, email: e.target.value })
             }
+            onBlur={handleEmailBlur}
             type="email"
           />
         </div>
 
-        <div className="input-group">
+        {userExist == false &&  <div className="input-group">
           <label>
             Password<span className="text-red-600">*</span>
           </label>
@@ -99,7 +122,7 @@ export default function UserForm({ activeStep, setActiveStep }) {
             }
             type="password"
           />
-        </div>
+        </div>}
 
         <div className="input-group phone-input">
           <label>Phone<span className="text-red-600">*</span></label>
@@ -166,14 +189,11 @@ export default function UserForm({ activeStep, setActiveStep }) {
             }
           />
         </div>
-      </form>
+      </div>
 
-      <div className="col-span-2">
+      <div className="col-span-2 flex gap-2">
           <button
-          onClick={() => {
-            localStorage.setItem("COATECH_USER_DATA", JSON.stringify(formData));
-            setActiveStep((prev) => prev + 1)
-          }}
+          onClick={handleSubmit}
             className="mt-4 bg-(--main-red-color) text-white p-2 rounded-md"
           >
             Next

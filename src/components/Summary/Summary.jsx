@@ -3,9 +3,15 @@ import { FaAnglesRight, FaAnglesLeft } from "react-icons/fa6";
 import { Table } from "antd";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
+import { useDispatch, useSelector } from "react-redux";
+import { handleCreateQuote } from "../../features/quotationsSlice";
+import { toast } from "react-toastify";
 
 export default function Summary({ activeStep, setActiveStep }) {
   const userData = JSON.parse(localStorage?.getItem("COATECH_USER_DATA")) || {};
+  const { quotations, isLoading } = useSelector((state) => state?.quotations);
+  const dispatch = useDispatch();
+
   const columns = [
     {
       dataIndex: "id",
@@ -13,8 +19,8 @@ export default function Summary({ activeStep, setActiveStep }) {
       title: "#",
     },
     {
-      dataIndex: "img",
-      key: "img",
+      dataIndex: "product_img",
+      key: "product_img",
       title: "Banel Image",
       render: (row) => (
         <img
@@ -36,41 +42,41 @@ export default function Summary({ activeStep, setActiveStep }) {
         return (
           <div className="flex max-w-[700px] flex-wrap gap-2">
             <>
-                {row?.formData?.catelog_name && (
-                  <span className="bg-gray-200 text-gray-800 text-xs px-2 py-1 rounded-full">
-                    Catalog: {row?.formData?.catelog_name}
-                  </span>
-                )}
-                {row?.formData?.powder_type && (
-                  <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                    Powder: {row?.formData?.powder_type}
-                  </span>
-                )}
-                {row?.formData?.finish && (
-                  <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
-                    Finish: {row?.formData?.finish}
-                  </span>
-                )}
-                {row?.formData?.gloss_level && (
-                  <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                    Gloss: {row?.formData?.gloss_level}
-                  </span>
-                )}
-                {row?.formData?.clear_coats && (
-                  <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
-                    Coats: {row?.formData?.clear_coats}
-                  </span>
-                )}
+              {row?.formData?.catelog_name && (
+                <span className="bg-gray-200 text-gray-800 text-xs px-2 py-1 rounded-full">
+                  Catalog: {row?.formData?.catelog_name}
+                </span>
+              )}
+              {row?.formData?.powder_type && (
+                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                  Powder: {row?.formData?.powder_type}
+                </span>
+              )}
+              {row?.formData?.finish && (
+                <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
+                  Finish: {row?.formData?.finish}
+                </span>
+              )}
+              {row?.formData?.gloss_level && (
+                <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                  Gloss: {row?.formData?.gloss_level}
+                </span>
+              )}
+              {row?.formData?.clear_coats && (
+                <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
+                  Coats: {row?.formData?.clear_coats}
+                </span>
+              )}
 
-                {row?.formData?.Attribute && (
-                  <span
-                    style={{ backgroundColor: `${row?.formData?.Attribute}` }}
-                    className=" text-white text-xs px-2 py-1 rounded-full"
-                  >
-                    Attribute: {row?.formData?.Attribute}
-                  </span>
-                )}
-              </>
+              {row?.formData?.Attribute && (
+                <span
+                  style={{ backgroundColor: `${row?.formData?.Attribute}` }}
+                  className=" text-white text-xs px-2 py-1 rounded-full"
+                >
+                  Attribute: {row?.formData?.Attribute}
+                </span>
+              )}
+            </>
           </div>
         );
       },
@@ -79,7 +85,13 @@ export default function Summary({ activeStep, setActiveStep }) {
       dataIndex: "",
       key: "quantity",
       title: "Weight",
-      render: (row) => <div>{row?.formData?.quantity ? `${Math.round(row?.formData?.quantity)} Kg` : "--"}</div>,
+      render: (row) => (
+        <div>
+          {row?.formData?.quantity
+            ? `${Math.round(row?.formData?.quantity)} Kg`
+            : "--"}
+        </div>
+      ),
     },
   ];
 
@@ -128,11 +140,35 @@ export default function Summary({ activeStep, setActiveStep }) {
   );
   const [selectedBanels, setSelectedBanels] = useState(originalBanels);
 
-   function handleSubmit() {
-    localStorage.removeItem("COATECH_USER_DATA")
-    localStorage.removeItem("SELECTED_BANNELS")
-    setActiveStep(0);
-   }
+  function handleSubmit() {
+    const data_send ={ 
+      ...userData,
+      ...(originalBanels?.length > 0 && {
+        product_ids: originalBanels.map(item => ({
+          id: item?.id,
+          quantity: item?.formData?.quantity,
+          type: item?.formData?.type,
+          props: JSON.stringify(item)
+        }))
+      })
+    }
+   console.log(data_send)
+    // dispatch(handleCreateQuote({ body: data_send }))
+    // .unwrap()
+    //   .then((res) => {
+    //     if (res?.message == "Quote created successfully") {
+    //       toast.success(res?.message);
+    //       localStorage.removeItem("SELECTED_BANNELS");
+    //       setActiveStep(0);
+    //     } else {
+    //       toast.error(res?.message);
+    //     }
+    //   })
+    //   .catch((e) => {
+    //     console.log(e);
+    //     toast.error(e);
+    //   });
+  }
 
   return (
     <div className="flex flex-col gap-4 my-6">
@@ -184,7 +220,10 @@ export default function Summary({ activeStep, setActiveStep }) {
         </>
       )}
 
-      <button onClick={handleSubmit} className="mt-4 bg-(--main-red-color) ms-auto w-fit text-white p-2 rounded-md">
+      <button
+        onClick={handleSubmit}
+        className="mt-4 bg-(--main-red-color) ms-auto w-fit text-white p-2 rounded-md"
+      >
         Submit
       </button>
     </div>

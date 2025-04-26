@@ -6,12 +6,14 @@ import Summary from "./components/Summary/Summary";
 
 export default function App() {
   const [activeStep, setActiveStep] = useState(0);
-  const selectedBannles = localStorage?.getItem("SELECTED_BANNELS") ? JSON.parse(localStorage.getItem("SELECTED_BANNELS")) : null
-  const [numberOfBanels , setNumberOfBanels] = useState(0)
-  
+  const selectedBannles = localStorage?.getItem("SELECTED_BANNELS")
+    ? JSON.parse(localStorage.getItem("SELECTED_BANNELS"))
+    : null;
+  const [numberOfBanels, setNumberOfBanels] = useState(0);
+
   useEffect(() => {
-    setNumberOfBanels(selectedBannles?.length || 0)
-  } , [selectedBannles])
+    setNumberOfBanels(selectedBannles?.length || 0);
+  }, [selectedBannles]);
 
   const steps = [
     { id: 0, title: "Bannels" },
@@ -78,7 +80,7 @@ export default function App() {
           <UserForm activeStep={activeStep} setActiveStep={setActiveStep} />
         )}
 
-{activeStep == 2 && (
+        {activeStep == 2 && (
           <Summary activeStep={activeStep} setActiveStep={setActiveStep} />
         )}
       </div>

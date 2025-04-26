@@ -67,11 +67,12 @@ export default function BannelModal({
     }
 
     const banelObject = {
-      id: item.id,
+      id: item.product_id,
       img: item.img,
       color: item.color,
       formData
     };
+    console.log(banelObject)
 
     setSelectedBanels((prev) => [...prev, banelObject]);  
   
@@ -122,7 +123,7 @@ export default function BannelModal({
     >
       <div className="grid grid-cols-2 gap-2 items-center">
         <div className="w-fit">
-          <img src={item?.img} className="object-cover" />
+          <img src={item?.product_image} className="object-cover" />
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
