@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { BANELS_DATA } from "../../utils/data";
-import { FaAnglesRight, FaAnglesLeft } from "react-icons/fa6";
+import { FaAnglesRight, FaAnglesLeft, FaFilter } from "react-icons/fa6";
 import BannelModal from "../BannelModal/BannelModal";
 import SideFilter from "../SideFilter/SideFilter";
 import { useDispatch, useSelector } from "react-redux";
 import { handleFetchProducts } from "../../features/productsSlice";
-import { handleFetchColors } from "../../features/colorSlice";
-import { Pagination, Spin } from "antd";
+import { Drawer, Pagination, Spin } from "antd";
+import { ErrorBoundary } from "react-error-boundary";
+import { LazyLoadImage } from "react-lazy-load-image-component";
+import "react-lazy-load-image-component/src/effects/blur.css";
 
 export default function Banels({ activeStep, setActiveStep }) {
-  // const [selectedBanels, setSelectedBanels] = useState(JSON.parse(localStorage.getItem("SELECTED_BANNELS"))||[]);
   const [allBanels, setAllBanels] = useState(BANELS_DATA || []);
   const [pagination, setPagination] = useState({
     current_page: 1,
@@ -20,13 +21,15 @@ export default function Banels({ activeStep, setActiveStep }) {
   const [searchValue, setSearchValue] = useState("");
   const [debouncedSearch, setDebounceSearch] = useState("");
   const [selectedColor, setSelectedColor] = useState("all");
+  const [openFilterSidebar, setOpenFilterSidebar] = useState(false);
+
   const dispatch = useDispatch();
   const { products, productLoading } = useSelector((state) => state?.products);
+
   const indexOfLastItems = pagination?.current_page * pagination?.pageSize;
   const indexOfFirstItems = indexOfLastItems - pagination?.pageSize;
 
   const handlePageChange = (page, pageSize) => {
-    console.log(page, pageSize);
     setPagination({ ...pagination, current_page: page, pageSize });
   };
 
@@ -34,7 +37,6 @@ export default function Banels({ activeStep, setActiveStep }) {
     const timeout = setTimeout(() => {
       setDebounceSearch(searchValue);
     }, 500);
-
     return () => clearTimeout(timeout);
   }, [searchValue]);
 
@@ -42,35 +44,30 @@ export default function Banels({ activeStep, setActiveStep }) {
     const keyword = debouncedSearch?.length && debouncedSearch?.toLowerCase();
     let filteredData = products?.data;
 
-    if (selectedColor) {
+    if (selectedColor && selectedColor !== "all") {
       filteredData = filteredData?.filter((item) =>
         item?.product_color
           ?.toLowerCase()
-          ?.includes(selectedColor?.toLowerCase())
+          ?.includes(selectedColor.toLowerCase())
       );
     }
 
-    if (selectedColor == "all") {
-      filteredData = products?.data;
-    }
-
     if (keyword) {
-      filteredData = filteredData.filter(
+      filteredData = filteredData?.filter(
         (item) =>
-          item.product_color?.toLowerCase().includes(keyword) ||
-          item.product_category?.toLowerCase().includes(keyword)
+          item.product_color?.toLowerCase()?.includes(keyword) ||
+          item.product_category?.toLowerCase()?.includes(keyword)
       );
     }
 
     setAllBanels(filteredData);
-  }, [debouncedSearch, selectedColor]);
+  }, [debouncedSearch, selectedColor, products]);
 
   useEffect(() => {
     dispatch(handleFetchProducts());
   }, [dispatch]);
 
   useEffect(() => {
-    console.log(products);
     setAllBanels(products?.data);
   }, [products]);
 
@@ -100,13 +97,26 @@ export default function Banels({ activeStep, setActiveStep }) {
         </div>
       </div>
 
-      <div className="grid gap-3 grid-cols-[3fr_9fr]">
-        <SideFilter
-          selectedColor={selectedColor}
-          setSelectedColor={setSelectedColor}
-        />
+      <div
+        onClick={() => setOpenFilterSidebar(true)}
+        className="bg-(--main-blue-color) flex justify-center items-center gap-2 p-2 w-fit rounded-md  lg:hidden mb-4"
+      >
+        <FaFilter className="text-white" />
+        <span className="text-white">Colors</span>
+      </div>
+
+      <div className="grid gap-3 grid-cols-1 lg:grid-cols-[3fr_9fr]">
+        <div className="hidden lg:block">
+          <ErrorBoundary fallback={<h2>Error While Loading Colors</h2>}>
+            <SideFilter
+              selectedColor={selectedColor}
+              setSelectedColor={setSelectedColor}
+            />
+          </ErrorBoundary>
+        </div>
 
         <div className="flex flex-col gap-2">
+          {/* Search Input */}
           <div className="w-full">
             <input
               onChange={(e) => setSearchValue(e.target.value)}
@@ -114,50 +124,60 @@ export default function Banels({ activeStep, setActiveStep }) {
               placeholder="Search For Products"
             />
           </div>
+
           {productLoading && (
-            <div className="h-screen flex justify-center items-center">
+            <div className="h-40 flex justify-center items-center">
               <Spin size="large" />
             </div>
           )}
 
-          {allBanels?.length ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mt-4 gap-y-3 gap-4">
-              {allBanels
-                ?.slice(indexOfFirstItems, indexOfLastItems)
-                .map((item) => (
-                  <div
-                    key={item.product_id}
-                    onClick={() => {
-                      setSelectedData(item); // 👈 لازم تحدد البانل
-
-                      // handleSelect(item)
-                      setOpenModal(true);
-                    }}
-                    className={`rounded-xl overflow-hidden cursor-pointer transition-all duration-300 shadow-lg p-4 `}
-                  >
-                    <img
-                      src={item.product_image}
-                      alt={item.product_name}
-                      className="w-full h-52 object-cover rounded-md mb-3"
-                    />
-                    <p className="font-semibold text-gray-900 text-center">
-                      {item.product_name}
-                    </p>
-                    <p className=" text-gray-400 text-sm text-center">
-                      {item?.product_category}
-                    </p>
-                  </div>
-                ))}
-            </div>
-          ) : (
-            <p className="text-xl flex justify-center items-center font-semibold">
-              No Banels
-            </p>
-          )}
+          <ErrorBoundary
+            resetKeys={[allBanels]}
+            fallback={<h2>Error While Loading Banels</h2>}
+          >
+            {allBanels?.length ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mt-4 gap-y-3 gap-4">
+                {allBanels
+                  ?.slice(indexOfFirstItems, indexOfLastItems)
+                  .map((item) => (
+                    <div
+                      key={item.product_id}
+                      onClick={() => {
+                        setSelectedData(item);
+                        setOpenModal(true);
+                      }}
+                      className="rounded-xl overflow-hidden cursor-pointer transition-all duration-300 shadow-lg p-4"
+                    >
+                      <LazyLoadImage
+                        effect="blur"
+                        placeholderSrc={item?.product_image}
+                        wrapperProps={{
+                          // If you need to, you can tweak the effect transition using the wrapper style.
+                          style: {transitionDelay: "1s"},
+                      }}
+                        src={item.product_image}
+                        alt={item.product_name}
+                        className="w-full h-48 object-contain rounded-md mb-3"
+                      />
+                      <p className="font-semibold text-gray-900 text-center">
+                        {item.product_name}
+                      </p>
+                      <p className="text-gray-400 text-sm text-center">
+                        {item?.product_category}
+                      </p>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <p className="text-xl flex justify-center items-center font-semibold">
+                No Banels
+              </p>
+            )}
+          </ErrorBoundary>
         </div>
       </div>
 
-      <div className="flex my-3 justify-center items-center">
+      <div className="flex my-3 justify-center items-center w-full">
         <Pagination
           onChange={handlePageChange}
           current={pagination?.current_page}
@@ -173,6 +193,19 @@ export default function Banels({ activeStep, setActiveStep }) {
         item={selectedData}
         setOpen={setOpenModal}
       />
+
+      <Drawer
+        title="Filter Colors"
+        placement="left"
+        onClose={() => setOpenFilterSidebar(false)}
+        open={openFilterSidebar}
+        width={250}
+      >
+        <SideFilter
+          selectedColor={selectedColor}
+          setSelectedColor={setSelectedColor}
+        />
+      </Drawer>
     </div>
   );
 }

@@ -1,19 +1,30 @@
-import React, { useEffect, useState } from "react";
-import Banels from "./components/Banels/Banels";
+import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { ToastContainer } from "react-toastify";
-import UserForm from "./components/UserForm/UserForm";
-import Summary from "./components/Summary/Summary";
+// import Banels from "./components/Banels/Banels";
+// import UserForm from "./components/UserForm/UserForm";
+// import Summary from "./components/Summary/Summary";
+import { Spin } from "antd";
+
+const Banels = lazy(() => import("./components/Banels/Banels"));
+const UserForm = lazy(() => import("./components/UserForm/UserForm"));
+const Summary = lazy(() => import("./components/Summary/Summary"));
 
 export default function App() {
   const [activeStep, setActiveStep] = useState(0);
-  const selectedBannles = localStorage?.getItem("SELECTED_BANNELS")
-    ? JSON.parse(localStorage.getItem("SELECTED_BANNELS"))
-    : null;
   const [numberOfBanels, setNumberOfBanels] = useState(0);
 
-  useEffect(() => {
-    setNumberOfBanels(selectedBannles?.length || 0);
-  }, [selectedBannles]);
+  const selectedBannles = useMemo(() => {
+    try {
+      if (localStorage.getItem("SELECTED_BANNELS")) {
+        setNumberOfBanels(
+          JSON.parse(localStorage.getItem("SELECTED_BANNELS"))?.length || 0
+        );
+        return JSON.parse(localStorage.getItem("SELECTED_BANNELS"));
+      }
+    } catch {
+      null;
+    }
+  }, []);
 
   const steps = [
     { id: 0, title: "Bannels" },
@@ -21,14 +32,10 @@ export default function App() {
     { id: 2, title: `Summary(${numberOfBanels})` },
   ];
 
-  useEffect(() => {
-    console.log(activeStep);
-  }, [activeStep]);
-
   return (
     <>
-      <div className="p-6">
-        <ol className="flex items-center w-full p-3 space-x-2 text-sm font-medium text-center text-white bg-[rgba(9,33,67,1)] border border-gray-700 rounded-lg shadow-sm sm:text-base sm:p-4 sm:space-x-4 rtl:space-x-reverse">
+      <div className="p-3 md:p-6">
+        <ol className="flex items-center w-full p-3 space-x-2  text-xs md:text-sm font-medium text-center text-white bg-[rgba(9,33,67,1)] border border-gray-700 rounded-lg shadow-sm sm:text-base sm:p-4 sm:space-x-4 rtl:space-x-reverse">
           {steps.map((step, index) => (
             <li
               onClick={() => setActiveStep(step?.id)}
@@ -40,7 +47,7 @@ export default function App() {
               }`}
             >
               <span
-                className={`flex items-center justify-center w-6 h-6 me-2 text-xs border rounded-full font-bold transition ${
+                className={`flex items-center justify-center w-4 h-4 md:w-6 md:h-6 me-2 text-xs border rounded-full font-bold transition ${
                   index === activeStep
                     ? "bg-white shadow-md text-gray-500 border-white"
                     : "border-gray-500 text-gray-300"
@@ -71,18 +78,25 @@ export default function App() {
             </li>
           ))}
         </ol>
-
-        {activeStep == 0 && (
-          <Banels activeStep={activeStep} setActiveStep={setActiveStep} />
-        )}
-
-        {activeStep == 1 && (
-          <UserForm activeStep={activeStep} setActiveStep={setActiveStep} />
-        )}
-
-        {activeStep == 2 && (
-          <Summary activeStep={activeStep} setActiveStep={setActiveStep} />
-        )}
+        <div className="mt-6">
+          <Suspense
+            fallback={
+              <div className="flex h-60 justify-center items-center">
+                <Spin size="large" />
+              </div>
+            }
+          >
+            {activeStep == 0 && (
+              <Banels activeStep={activeStep} setActiveStep={setActiveStep} />
+            )}
+            {activeStep == 1 && (
+              <UserForm activeStep={activeStep} setActiveStep={setActiveStep} />
+            )}
+            {activeStep == 2 && (
+              <Summary activeStep={activeStep} setActiveStep={setActiveStep} />
+            )}
+          </Suspense>
+        </div>
       </div>
       <ToastContainer />
     </>

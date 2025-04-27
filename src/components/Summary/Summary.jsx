@@ -19,8 +19,8 @@ export default function Summary({ activeStep, setActiveStep }) {
       title: "#",
     },
     {
-      dataIndex: "product_img",
-      key: "product_img",
+      dataIndex: "img",
+      key: "img",
       title: "Banel Image",
       render: (row) => (
         <img
@@ -30,9 +30,15 @@ export default function Summary({ activeStep, setActiveStep }) {
       ),
     },
     {
-      dataIndex: "color",
-      key: "color",
+      dataIndex: "",
+      key: "",
       title: "Name",
+      render:(row) => {
+        console.log(row)
+        return(  
+          <p>{row?.formData?.color}</p>
+        )
+      }
     },
     {
       key: "details",
@@ -124,15 +130,16 @@ export default function Summary({ activeStep, setActiveStep }) {
       title: "Address",
     },
     {
+      dataIndex: "region",
+      key: "region",
+      title: "Country",
+    },
+    {
       dataIndex: "city",
       key: "city",
       title: "City",
     },
-    {
-      dataIndex: "region",
-      key: "region",
-      title: "Region",
-    },
+
   ];
 
   const [originalBanels, setOriginalBanels] = useState(
@@ -141,34 +148,38 @@ export default function Summary({ activeStep, setActiveStep }) {
   const [selectedBanels, setSelectedBanels] = useState(originalBanels);
 
   function handleSubmit() {
-    const data_send ={ 
+    const data_send = {
       ...userData,
       ...(originalBanels?.length > 0 && {
-        product_ids: originalBanels.map(item => ({
+        product_ids: originalBanels.map((item) => ({
           id: item?.id,
           quantity: item?.formData?.quantity,
           type: item?.formData?.type,
-          props: JSON.stringify(item)
-        }))
+          props: JSON.stringify(item),
+        })),
+      }),
+    };
+    console.log(data_send);
+    dispatch(handleCreateQuote({ body: data_send }))
+      .unwrap()
+      .then((res) => {
+        if (res?.message == "Quote created successfully") {
+          toast.success(res?.message);
+          localStorage.removeItem("SELECTED_BANNELS");
+          setActiveStep(0);
+        } else {
+          toast.error(res?.message);
+        }
       })
-    }
-   console.log(data_send)
-    // dispatch(handleCreateQuote({ body: data_send }))
-    // .unwrap()
-    //   .then((res) => {
-    //     if (res?.message == "Quote created successfully") {
-    //       toast.success(res?.message);
-    //       localStorage.removeItem("SELECTED_BANNELS");
-    //       setActiveStep(0);
-    //     } else {
-    //       toast.error(res?.message);
-    //     }
-    //   })
-    //   .catch((e) => {
-    //     console.log(e);
-    //     toast.error(e);
-    //   });
+      .catch((e) => {
+        console.log(e);
+        toast.error(e);
+      });
   }
+
+ useEffect(() => {
+  console.log(originalBanels)
+ } ,[originalBanels])
 
   return (
     <div className="flex flex-col gap-4 my-6">
@@ -200,7 +211,7 @@ export default function Summary({ activeStep, setActiveStep }) {
         <Table
           scroll={{ x: "max-content" }}
           columns={columns}
-          dataSource={selectedBanels}
+          dataSource={selectedBanels || []}
         />
       </div>
 

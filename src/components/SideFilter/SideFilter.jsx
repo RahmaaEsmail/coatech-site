@@ -23,7 +23,7 @@ export default function SideFilter({ selectedColor, setSelectedColor }) {
     setSelectedColor(color);
   }
   return (
-    <div className="!border-[2px] max-h-[400px] overflow-y-auto !border-gray-200 rounded-md p-3">
+    <div className="lg:!border-[2px] lg:max-h-[400px] lg:overflow-y-auto lg:!border-gray-200 rounded-md p-3">
       <p className="font-semibold">Filter By Color</p>
 
       <div className="flex flex-col gap-3 mt-4">

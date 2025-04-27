@@ -68,7 +68,7 @@ export default function BannelModal({
 
     const banelObject = {
       id: item.product_id,
-      img: item.img,
+      img: item.product_image,
       color: item.color,
       formData
     };
@@ -121,7 +121,7 @@ export default function BannelModal({
       onCancel={() => setOpen(false)}
       onClose={() => setOpen(false)}
     >
-      <div className="grid grid-cols-2 gap-2 items-center">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-center">
         <div className="w-fit">
           <img src={item?.product_image} className="object-cover" />
         </div>
@@ -254,7 +254,7 @@ export default function BannelModal({
             </select>
           </div>
 
-          <div className="flex gap-2 items-center">
+          <div className="flex flex-wrap md:flex-nowrap gap-2 items-center">
           <div className="input-group w-full">
             <label>Type :</label>
             <select value={formData?.type} onChange={(e) => setFormData({...formData, type:e.target.value })}>
