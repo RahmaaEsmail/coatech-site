@@ -197,13 +197,13 @@ export default function Summary({ activeStep, setActiveStep }) {
             <FaAnglesLeft />
           </button>
 
-          <button
+          {/* <button
             className="px-3 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition disabled:opacity-50"
             onClick={() => setActiveStep((prev) => prev + 1)}
             disabled={activeStep === 2}
           >
             <FaAnglesRight />
-          </button>
+          </button> */}
         </div>
       </div>
 

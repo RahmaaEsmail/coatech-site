@@ -9,8 +9,14 @@ import { Drawer, Pagination, Spin } from "antd";
 import { ErrorBoundary } from "react-error-boundary";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import "react-lazy-load-image-component/src/effects/blur.css";
+import UserForm from "../UserForm/UserForm";
 
 export default function Banels({ activeStep, setActiveStep }) {
+  const COATECH_USER_DATA = localStorage.getItem("COATECH_USER_DATA")
+    ? JSON.parse(localStorage.getItem("COATECH_USER_DATA"))
+    : null;
+
+  const [debounceCodeValue, setDebounceCodeValue] = useState("");
   const [allBanels, setAllBanels] = useState(BANELS_DATA || []);
   const [pagination, setPagination] = useState({
     current_page: 1,
@@ -21,7 +27,11 @@ export default function Banels({ activeStep, setActiveStep }) {
   const [searchValue, setSearchValue] = useState("");
   const [debouncedSearch, setDebounceSearch] = useState("");
   const [selectedColor, setSelectedColor] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [openFilterSidebar, setOpenFilterSidebar] = useState(false);
+  const [searchCodeValue, setSearchCodeValue] = useState("");
+  const [filteredData, setFilteredData] = useState([]);
+  const [userFormModal, setUserFormModal] = useState(false);
 
   const dispatch = useDispatch();
   const { products, productLoading } = useSelector((state) => state?.products);
@@ -33,35 +43,60 @@ export default function Banels({ activeStep, setActiveStep }) {
     setPagination({ ...pagination, current_page: page, pageSize });
   };
 
+  // Reset pagination when filters change
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      setDebounceSearch(searchValue);
-    }, 500);
-    return () => clearTimeout(timeout);
-  }, [searchValue]);
+    setPagination((prev) => ({ ...prev, current_page: 1 }));
+  }, [selectedColor, selectedCategory, searchCodeValue, debouncedSearch]);
 
   useEffect(() => {
     const keyword = debouncedSearch?.length && debouncedSearch?.toLowerCase();
-    let filteredData = products?.data;
+    let filtered = products?.data || [];
 
+    // Apply color filter
     if (selectedColor && selectedColor !== "all") {
-      filteredData = filteredData?.filter((item) =>
-        item?.product_color
-          ?.toLowerCase()
-          ?.includes(selectedColor.toLowerCase())
-      );
-    }
-
-    if (keyword) {
-      filteredData = filteredData?.filter(
+      filtered = filtered.filter(
         (item) =>
-          item.product_color?.toLowerCase()?.includes(keyword) ||
-          item.product_category?.toLowerCase()?.includes(keyword)
+          item?.product_color?.toLowerCase() === selectedColor.toLowerCase()
       );
     }
 
-    setAllBanels(filteredData);
-  }, [debouncedSearch, selectedColor, products]);
+    // Apply category filter
+    if (selectedCategory && selectedCategory !== "all") {
+      filtered = filtered.filter(
+        (item) =>
+          item?.product_category?.toLowerCase() ===
+          selectedCategory.toLowerCase()
+      );
+    }
+
+    // Apply search code filter
+    if (searchCodeValue?.length > 0) {
+      filtered = filtered.filter((item) =>
+        item?.product_name
+          ?.toLowerCase()
+          .includes(searchCodeValue.toLowerCase())
+      );
+    }
+
+    // Apply general search filter
+    if (keyword) {
+      filtered = filtered.filter(
+        (item) =>
+          item.product_name?.toLowerCase().includes(keyword) ||
+          item.product_color?.toLowerCase().includes(keyword) ||
+          item.product_category?.toLowerCase().includes(keyword)
+      );
+    }
+
+    setFilteredData(filtered);
+    setAllBanels(filtered);
+  }, [
+    debouncedSearch,
+    selectedColor,
+    selectedCategory,
+    products,
+    searchCodeValue,
+  ]);
 
   useEffect(() => {
     dispatch(handleFetchProducts());
@@ -71,28 +106,28 @@ export default function Banels({ activeStep, setActiveStep }) {
     setAllBanels(products?.data);
   }, [products]);
 
+  useEffect(() => {
+    console.log(searchCodeValue, selectedCategory);
+  }, [searchCodeValue, selectedCategory]);
   return (
     <div className="flex flex-col gap-4 my-6">
       <div className="flex justify-between items-center">
-        <h3 className="font-bold text-lg text-gray-900">
-          Select Bannel <span className="text-[#E82F3C]">*</span>:
-        </h3>
+        <h3 className="font-bold text-lg text-center text-gray-900">Bannels</h3>
 
         <div className="flex items-center gap-2">
-          <button
+          {/* <button
             className="px-3 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition disabled:opacity-50"
             onClick={() => setActiveStep((prev) => prev - 1)}
             disabled={activeStep === 0}
           >
             <FaAnglesLeft />
-          </button>
+          </button> */}
 
           <button
             className="px-3 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition disabled:opacity-50"
-            onClick={() => setActiveStep((prev) => prev + 1)}
-            disabled={activeStep === 3}
+            onClick={() => setUserFormModal(true)}
           >
-            <FaAnglesRight />
+            Proceed to next step
           </button>
         </div>
       </div>
@@ -102,21 +137,24 @@ export default function Banels({ activeStep, setActiveStep }) {
         className="bg-(--main-blue-color) flex justify-center items-center gap-2 p-2 w-fit rounded-md  lg:hidden mb-4"
       >
         <FaFilter className="text-white" />
-        <span className="text-white">Colors</span>
+        <span className="text-white">Filters</span>
       </div>
 
       <div className="grid gap-3 grid-cols-1 lg:grid-cols-[3fr_9fr]">
         <div className="hidden lg:block">
-          <ErrorBoundary fallback={<h2>Error While Loading Colors</h2>}>
+          <ErrorBoundary fallback={<h2>Error While Loading Filters</h2>}>
             <SideFilter
               selectedColor={selectedColor}
               setSelectedColor={setSelectedColor}
+              selectedCategory={selectedCategory}
+              setSelectedCategory={setSelectedCategory}
+              setSearchCodeValue={setSearchCodeValue}
+              searchCodeValue={searchCodeValue}
             />
           </ErrorBoundary>
         </div>
 
         <div className="flex flex-col gap-2">
-          {/* Search Input */}
           <div className="w-full">
             <input
               onChange={(e) => setSearchValue(e.target.value)}
@@ -153,8 +191,8 @@ export default function Banels({ activeStep, setActiveStep }) {
                         placeholderSrc={item?.product_image}
                         wrapperProps={{
                           // If you need to, you can tweak the effect transition using the wrapper style.
-                          style: {transitionDelay: "1s"},
-                      }}
+                          style: { transitionDelay: "1s" },
+                        }}
                         src={item.product_image}
                         alt={item.product_name}
                         className="w-full h-48 object-contain rounded-md mb-3"
@@ -182,7 +220,7 @@ export default function Banels({ activeStep, setActiveStep }) {
           onChange={handlePageChange}
           current={pagination?.current_page}
           pageSize={pagination?.pageSize}
-          total={products?.data?.length}
+          total={filteredData?.length}
         />
       </div>
 
@@ -192,10 +230,12 @@ export default function Banels({ activeStep, setActiveStep }) {
         open={openModal}
         item={selectedData}
         setOpen={setOpenModal}
+        setActiveStep={setActiveStep}
+        activeStep={activeStep}
       />
 
       <Drawer
-        title="Filter Colors"
+        title="Filters"
         placement="left"
         onClose={() => setOpenFilterSidebar(false)}
         open={openFilterSidebar}
@@ -204,8 +244,16 @@ export default function Banels({ activeStep, setActiveStep }) {
         <SideFilter
           selectedColor={selectedColor}
           setSelectedColor={setSelectedColor}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
         />
       </Drawer>
+
+      <UserForm
+        setActiveStep={setActiveStep}
+        open={userFormModal}
+        setOpen={setUserFormModal}
+      />
     </div>
   );
 }

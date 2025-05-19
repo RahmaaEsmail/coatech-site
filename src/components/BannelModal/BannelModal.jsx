@@ -1,4 +1,4 @@
-import { Modal } from "antd";
+import { Modal, Switch } from "antd";
 import React, { useEffect, useState } from "react";
 import {
   ALL_COLORS,
@@ -9,12 +9,10 @@ import {
   POWDER_TYPES,
 } from "../../utils/data";
 import { toast } from "react-toastify";
+import UserForm from "../UserForm/UserForm";
 
-export default function BannelModal({
-  open,
-  setOpen,
-  item,
-}) {
+export default function BannelModal({setActiveStep , open, setOpen, item }) {
+
   const [formData, setFormData] = useState({
     catelog_name: "",
     color: "",
@@ -22,39 +20,53 @@ export default function BannelModal({
     finish: "",
     gloss_level: "",
     clear_coats: "",
-    type:"kg",
+    type: false, // false for kg, true for lb
     quantity: null,
+    comment: "",
   });
 
   const [selectedBanels, setSelectedBanels] = useState(
     JSON.parse(localStorage.getItem("SELECTED_BANNELS")) || []
   );
-  
-
+ 
   function handleSubmit(e) {
     e.preventDefault();
-  
+
     const { quantity, type } = formData;
-  
+
+    if (!formData?.gloss_level) {
+      toast.warn("Please select gloss level first!");
+      return;
+    }
+
+    if (!formData?.finish) {
+      toast.warn("Please select finish first!");
+      return;
+    }
+    if (!formData?.powder_type) {
+      toast.warn("Please select Chemistry first!");
+      return;
+    }
+
     if (+quantity <= 0) {
       toast.warn("Please enter a positive quantity");
       return;
     }
-  
+
     let isValid = false;
-  
-    if (type === "kg") {
+
+    if (!type) { // kg
       isValid = +quantity % 25 === 0;
-    } else if (type === "lb") {
+    } else { // lb
       const mod = +quantity % 55.116;
       isValid = mod < 0.01 || mod > 55.106;
     }
-  
+
     if (!isValid) {
       toast.warn(
         `Please enter a quantity that is a multiple of ${
-          type === "kg" ? "25" : "55.116"
-        } (${type.toUpperCase()})`
+          !type ? "25" : "55.116"
+        } (${!type ? "KG" : "LB"})`
       );
       return;
     }
@@ -63,39 +75,21 @@ export default function BannelModal({
       ...formData,
       quantity,
       type,
-    created_at: new Date().toISOString()
-    }
+      created_at: new Date().toISOString(),
+    };
 
     const banelObject = {
       id: item.product_id,
       img: item.product_image,
       color: item.color,
-      formData
+      type: type ? "lb" : "kg",
+      formData,
     };
-    console.log(banelObject)
 
-    setSelectedBanels((prev) => [...prev, banelObject]);  
-  
-    // const data_send = {
-    //   ...formData,
-    //   quantity: +quantity,
-    //   type,
-    // };
-  
-    // setSelectedBanels((prev) => {
-    //   const isExist = prev?.some((banel) => banel?.id === item?.id);
-  
-    //   if (isExist) {
-    //     return prev?.map((banel) =>
-    //       banel?.id === item?.id ? ({[ ...banel, ...data_send] }) : banel
-    //     );
-    //   } else {
-    //     return [...prev, data_send];
-    //   }
-    // });
-  
+    setSelectedBanels((prev) => [...prev, banelObject]);
+    localStorage.setItem("SELECTED_BANNELS", JSON.stringify([...selectedBanels, banelObject]));
+
     toast.success("Banel Data has been added successfully");
-    setOpen(false);
     setFormData({
       catelog_name: "",
       color: "",
@@ -103,17 +97,21 @@ export default function BannelModal({
       finish: "",
       gloss_level: "",
       clear_coats: "",
-      type: "kg",
-      quantity: 1,
+      type: false,
+      quantity: "",
+      comment: "",
     });
+    setOpen(false);
+    // setUserFormModal(true);
   }
-  
 
   useEffect(() => {
     localStorage.setItem("SELECTED_BANNELS", JSON.stringify(selectedBanels));
   }, [selectedBanels]);
 
+
   return (
+    <div>
     <Modal
       footer={null}
       width={"800px"}
@@ -127,49 +125,6 @@ export default function BannelModal({
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="input-group">
-            <label>
-              <span>Catalog</span>
-              <span className="text-red-600">*</span>
-            </label>
-            <select
-              value={formData.catelog_name}
-              onChange={(e) =>
-                setFormData({ ...formData, catelog_name: e.target.value })
-              }
-            >
-              <option value="" disabled>
-                Select Catalog
-              </option>
-              {catalogs?.map((item) => (
-                <option key={item?.id} value={item?.name}>
-                  {item?.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="input-group">
-            <label>
-              <span>Color</span>
-            </label>
-            <select
-              value={formData.color}
-              onChange={(e) =>
-                setFormData({ ...formData, color: e.target.value })
-              }
-            >
-              <option value="" disabled>
-                Select Color
-              </option>
-              {ALL_COLORS?.map((item) => (
-                <option key={item?.ID} value={item?.Name}>
-                  {item?.Name}
-                </option>
-              ))}
-            </select>
-          </div>
-
           <div className="input-group">
             <label>
               <span>Gloss Level</span>
@@ -214,7 +169,7 @@ export default function BannelModal({
 
           <div className="input-group">
             <label>
-              <span>Powder Type</span>
+              <span>Chemistry</span>
             </label>
             <select
               value={formData.powder_type}
@@ -223,7 +178,7 @@ export default function BannelModal({
               }
             >
               <option value="" disabled>
-                Select Powder Type
+                Select Chemistry
               </option>
               {POWDER_TYPES?.map((item) => (
                 <option key={item?.id} value={item?.value}>
@@ -234,51 +189,50 @@ export default function BannelModal({
           </div>
 
           <div className="input-group">
-            <label>
-              <span>Clear Coats</span>
-            </label>
-            <select
-              value={formData.clear_coats}
+            <label>Comment</label>
+            <textarea
+              value={formData?.comment}
               onChange={(e) =>
-                setFormData({ ...formData, clear_coats: e.target.value })
+                setFormData({ ...formData, comment: e.target.value })
               }
-            >
-              <option value="" disabled>
-                Select Clear Coats
-              </option>
-              {CLEAR_COATS?.map((item) => (
-                <option key={item?.id} value={item?.label}>
-                  {item?.label}
-                </option>
-              ))}
-            </select>
+            ></textarea>
           </div>
 
           <div className="flex flex-wrap md:flex-nowrap gap-2 items-center">
-          <div className="input-group w-full">
-            <label>Type :</label>
-            <select value={formData?.type} onChange={(e) => setFormData({...formData, type:e.target.value })}>
-               <option disabled selected value="">Select Weight</option>
-               <option value="lb">Pound</option>
-               <option value="kg">Kilogram</option>
-            </select>
-          </div>          
- 
-          {<div className="input-group w-full">
-            <label>Weight in {formData?.type && formData.type}:</label>
-            <input value={formData?.quantity} onChange={(e) => setFormData({...formData , quantity: +e.target.value})} type="number" onWheel={(e) =>e.target.blur()} placeholder="Quantity"/>
-            {/* <p className="!font-semibold">Note: 1 Box = 25 Kg</p> */}
-          </div>}
+            <div className="input-group w-full">
+              <label>
+                Weight in {formData.type ? "lb" : "kg"}:
+              </label>
+              <input
+                value={formData?.quantity || ""}
+                onChange={(e) => setFormData({...formData , quantity : +e.target.value})}
+                type="number"
+                onWheel={(e) => e.target.blur()}
+                placeholder="Quantity"
+              />
+            </div>
+
+            <div className="flex gap-2 items-center mt-[30px]">
+              <label>Kg</label>
+              <Switch
+                checked={formData.type}
+                onChange={(checked) => setFormData({ ...formData, type: checked })}
+              />
+              <label>lb</label>
+            </div>
           </div>
 
           <button
             type="submit"
             className="bg-(--main-red-color) p-2 rounded-md hover:bg-[#e82f3bc1] text-white"
           >
-            Submit
+            Next
           </button>
         </form>
       </div>
+
+      
     </Modal>
+    </div>
   );
 }

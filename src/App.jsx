@@ -28,8 +28,8 @@ export default function App() {
 
   const steps = [
     { id: 0, title: "Bannels" },
-    { id: 1, title: "Account Info" },
-    { id: 2, title: `Summary(${numberOfBanels})` },
+    // { id: 1, title: "Account Info" },
+    { id: 1, title: `Summary(${numberOfBanels})` },
   ];
 
   return (
@@ -38,7 +38,6 @@ export default function App() {
         <ol className="flex items-center w-full p-3 space-x-2  text-xs md:text-sm font-medium text-center text-white bg-[rgba(9,33,67,1)] border border-gray-700 rounded-lg shadow-sm sm:text-base sm:p-4 sm:space-x-4 rtl:space-x-reverse">
           {steps.map((step, index) => (
             <li
-              onClick={() => setActiveStep(step?.id)}
               key={index}
               className={`flex items-center cursor-pointer ${
                 index === activeStep
@@ -86,13 +85,14 @@ export default function App() {
               </div>
             }
           >
+            {/* <Banels/> */}
             {activeStep == 0 && (
               <Banels activeStep={activeStep} setActiveStep={setActiveStep} />
             )}
-            {activeStep == 1 && (
+            {/* {activeStep == 1 && (
               <UserForm activeStep={activeStep} setActiveStep={setActiveStep} />
-            )}
-            {activeStep == 2 && (
+            )} */}
+            {activeStep == 1 && (
               <Summary activeStep={activeStep} setActiveStep={setActiveStep} />
             )}
           </Suspense>

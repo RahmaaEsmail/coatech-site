@@ -70,11 +70,8 @@ export const BANELS_DATA = [
 
 
 export const catalogs = [
-    { id: 1, name: "Special Effects" },
-    { id: 2, name: "RAL" },
-    { id: 3, name: "Architectural" },
-    { id: 4, name: "Automotive" },
-    { id: 5, name: "WOOD FINISH" }
+    { id: 1, label:"Special Effects" , value:"Specialities"},
+    { id: 2, label: "RAL" , value:"RAL" },
 ];
 
 export const ALL_COLORS = [

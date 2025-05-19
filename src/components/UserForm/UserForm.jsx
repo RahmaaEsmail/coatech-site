@@ -5,8 +5,9 @@ import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { useDispatch, useSelector } from "react-redux";
 import { handleCheckEmail } from "../../features/authSlice";
+import { Modal } from "antd";
 
-export default function UserForm({ activeStep, setActiveStep }) {
+export default function UserForm({ activeStep, setActiveStep  , open , setOpen  }) {
   const userData =
     JSON.parse(localStorage?.getItem("COATECH_USER_DATA")) || null;
   const dispatch = useDispatch();
@@ -49,14 +50,17 @@ export default function UserForm({ activeStep, setActiveStep }) {
       toast.warn("Please fill in  email field");
       return;
     }
-
     localStorage.setItem("COATECH_USER_DATA", JSON.stringify(formData));
-    // toast.success("Account Created Successfully");
-    setActiveStep((prev) => prev + 1);
+    toast.success("User data has submitted ")
+    setOpen(false);
+    setActiveStep(1);
   }
 
   return (
     <div className="my-6">
+      <Modal footer={null} open={open} onCancel={() => setOpen(false)} onClose={() =>setOpen(false)} className="flex  ms-auto w-fit items-center gap-2">
+               
+
       <div className="w-full mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="input-group">
           <label>
@@ -175,7 +179,8 @@ export default function UserForm({ activeStep, setActiveStep }) {
         >
           Next
         </button>
-      </div>
+        </div>
+      </Modal>
     </div>
   );
 }
