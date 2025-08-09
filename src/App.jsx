@@ -4,6 +4,7 @@ import { ToastContainer } from "react-toastify";
 // import UserForm from "./components/UserForm/UserForm";
 // import Summary from "./components/Summary/Summary";
 import { Spin } from "antd";
+import useCartHook from "./hooks/useCart";
 
 const Banels = lazy(() => import("./components/Banels/Banels"));
 const UserForm = lazy(() => import("./components/UserForm/UserForm"));
@@ -12,24 +13,11 @@ const Summary = lazy(() => import("./components/Summary/Summary"));
 export default function App() {
   const [activeStep, setActiveStep] = useState(0);
   const [numberOfBanels, setNumberOfBanels] = useState(0);
-
-  const selectedBannles = useMemo(() => {
-    try {
-      if (localStorage.getItem("SELECTED_BANNELS")) {
-        setNumberOfBanels(
-          JSON.parse(localStorage.getItem("SELECTED_BANNELS"))?.length || 0
-        );
-        return JSON.parse(localStorage.getItem("SELECTED_BANNELS"));
-      }
-    } catch {
-      null;
-    }
-  }, []);
+  const {setCart , cart} = useCartHook();
 
   const steps = [
-    { id: 0, title: "Bannels" },
-    // { id: 1, title: "Account Info" },
-    { id: 1, title: `Summary(${numberOfBanels})` },
+    { id: 0, title: "Get a quote" },
+    { id: 1, title: `Cart (${cart?.length > 0 ? cart?.length : "0"})` },
   ];
 
   return (
@@ -38,6 +26,7 @@ export default function App() {
         <ol className="flex items-center w-full p-3 space-x-2  text-xs md:text-sm font-medium text-center text-white bg-[rgba(9,33,67,1)] border border-gray-700 rounded-lg shadow-sm sm:text-base sm:p-4 sm:space-x-4 rtl:space-x-reverse">
           {steps.map((step, index) => (
             <li
+            onClick={() => setActiveStep(step?.id)}
               key={index}
               className={`flex items-center cursor-pointer ${
                 index === activeStep

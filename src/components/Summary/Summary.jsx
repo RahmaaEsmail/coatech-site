@@ -1,16 +1,31 @@
 import React, { useEffect, useState } from "react";
-import { FaAnglesRight, FaAnglesLeft } from "react-icons/fa6";
+import { FaAnglesRight, FaAnglesLeft, FaTrash, FaBoxOpen } from "react-icons/fa6";
 import { Table } from "antd";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { useDispatch, useSelector } from "react-redux";
 import { handleCreateQuote } from "../../features/quotationsSlice";
 import { toast } from "react-toastify";
+import UserForm from "../UserForm/UserForm";
+import useBanelsHook from "../../hooks/useBanels";
 
 export default function Summary({ activeStep, setActiveStep }) {
   const userData = JSON.parse(localStorage?.getItem("COATECH_USER_DATA")) || {};
   const { quotations, isLoading } = useSelector((state) => state?.quotations);
   const dispatch = useDispatch();
+  const { setBanels, banels } = useBanelsHook();
+  const [openUserModal, setOpenUserModal] = useState(false);
+
+  // Initialize selectedBanels from localStorage
+  const [selectedBanels, setSelectedBanels] = useState(() => {
+    const storedItems = localStorage.getItem("COATECH_CART_ITEMS");
+    return storedItems ? JSON.parse(storedItems) : [];
+  });
+
+  // Update banels when selectedBanels changes
+  useEffect(() => {
+    setBanels(selectedBanels);
+  }, [selectedBanels, setBanels]);
 
   const columns = [
     {
@@ -30,73 +45,82 @@ export default function Summary({ activeStep, setActiveStep }) {
       ),
     },
     {
-      dataIndex: "",
-      key: "",
+      dataIndex: "formData",
+      key: "formData",
       title: "Name",
-      render:(row) => {
-        console.log(row)
-        return(  
-          <p>{row?.formData?.color}</p>
-        )
-      }
+      render: (formData) => (
+        <p>{formData?.color || 'N/A'}</p>
+      )
     },
     {
       key: "details",
       title: "Details",
       render: (row) => {
-        console.log(row);
         return (
           <div className="flex max-w-[700px] flex-wrap gap-2">
-            <>
-              {row?.formData?.catelog_name && (
-                <span className="bg-gray-200 text-gray-800 text-xs px-2 py-1 rounded-full">
-                  Catalog: {row?.formData?.catelog_name}
-                </span>
-              )}
-              {row?.formData?.powder_type && (
-                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                  Powder: {row?.formData?.powder_type}
-                </span>
-              )}
-              {row?.formData?.finish && (
-                <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
-                  Finish: {row?.formData?.finish}
-                </span>
-              )}
-              {row?.formData?.gloss_level && (
-                <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                  Gloss: {row?.formData?.gloss_level}
-                </span>
-              )}
-              {row?.formData?.clear_coats && (
-                <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
-                  Coats: {row?.formData?.clear_coats}
-                </span>
-              )}
-
-              {row?.formData?.Attribute && (
-                <span
-                  style={{ backgroundColor: `${row?.formData?.Attribute}` }}
-                  className=" text-white text-xs px-2 py-1 rounded-full"
-                >
-                  Attribute: {row?.formData?.Attribute}
-                </span>
-              )}
-            </>
+            {row?.formData?.catelog_name && (
+              <span className="bg-gray-200 text-gray-800 text-xs px-2 py-1 rounded-full">
+                Catalog: {row?.formData?.catelog_name}
+              </span>
+            )}
+            {row?.formData?.powder_type && (
+              <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                Powder: {row?.formData?.powder_type}
+              </span>
+            )}
+            {row?.formData?.finish && (
+              <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
+                Finish: {row?.formData?.finish}
+              </span>
+            )}
+            {row?.formData?.gloss_level && (
+              <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                Gloss: {row?.formData?.gloss_level}
+              </span>
+            )}
+            {row?.formData?.clear_coats && (
+              <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
+                Coats: {row?.formData?.clear_coats}
+              </span>
+            )}
+            {row?.formData?.Attribute && (
+              <span
+                style={{ backgroundColor: `${row?.formData?.Attribute}` }}
+                className="text-white text-xs px-2 py-1 rounded-full"
+              >
+                Attribute: {row?.formData?.Attribute}
+              </span>
+            )}
           </div>
         );
       },
     },
     {
-      dataIndex: "",
+      dataIndex: "formData",
       key: "quantity",
       title: "Weight",
-      render: (row) => (
+      render: (formData) => (
         <div>
-          {row?.formData?.quantity
-            ? `${Math.round(row?.formData?.quantity)} Kg`
+          {formData?.quantity
+            ? `${Math.round(formData?.quantity)} Kg`
             : "--"}
         </div>
+      ),
+    },
+    {
+      key: "action",
+      title: "Action",
+      render: (_, record) => (
+        <button
+          onClick={() => {
+            const newBanels = selectedBanels.filter((item) => item.id !== record.id);
+            setSelectedBanels(newBanels);
+            localStorage.setItem("COATECH_CART_ITEMS", JSON.stringify(newBanels));
+          }}
+          className="text-red-500 hover:text-red-700"
+        >
+          <FaTrash />
+        </button>
       ),
     },
   ];
@@ -139,47 +163,7 @@ export default function Summary({ activeStep, setActiveStep }) {
       key: "city",
       title: "City",
     },
-
   ];
-
-  const [originalBanels, setOriginalBanels] = useState(
-    JSON.parse(localStorage.getItem("SELECTED_BANNELS")) || []
-  );
-  const [selectedBanels, setSelectedBanels] = useState(originalBanels);
-
-  function handleSubmit() {
-    const data_send = {
-      ...userData,
-      ...(originalBanels?.length > 0 && {
-        product_ids: originalBanels.map((item) => ({
-          id: item?.id,
-          quantity: item?.formData?.quantity,
-          type: item?.formData?.type,
-          props: JSON.stringify(item),
-        })),
-      }),
-    };
-    console.log(data_send);
-    dispatch(handleCreateQuote({ body: data_send }))
-      .unwrap()
-      .then((res) => {
-        if (res?.message == "Quote created successfully") {
-          toast.success(res?.message);
-          localStorage.removeItem("SELECTED_BANNELS");
-          setActiveStep(0);
-        } else {
-          toast.error(res?.message);
-        }
-      })
-      .catch((e) => {
-        console.log(e);
-        toast.error(e);
-      });
-  }
-
- useEffect(() => {
-  console.log(originalBanels)
- } ,[originalBanels])
 
   return (
     <div className="flex flex-col gap-4 my-6">
@@ -196,47 +180,45 @@ export default function Summary({ activeStep, setActiveStep }) {
           >
             <FaAnglesLeft />
           </button>
-
-          {/* <button
-            className="px-3 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition disabled:opacity-50"
-            onClick={() => setActiveStep((prev) => prev + 1)}
-            disabled={activeStep === 2}
-          >
-            <FaAnglesRight />
-          </button> */}
         </div>
       </div>
 
-      <div className="p-2 rounded-md  mt-3">
-        <Table
-          scroll={{ x: "max-content" }}
-          columns={columns}
-          dataSource={selectedBanels || []}
-        />
+      <div className="p-2 rounded-md mt-3">
+        {selectedBanels?.length > 0 ? (
+          <Table
+            scroll={{ x: "max-content" }}
+            columns={columns}
+            dataSource={selectedBanels}
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center py-12 px-4 bg-gray-50 rounded-lg">
+            <FaBoxOpen className="text-6xl text-gray-400 mb-4" />
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">No Banels Selected</h3>
+            <p className="text-gray-500 text-center max-w-md">
+              You haven't selected any banels yet. Please go back and select some banels to proceed with your quotation.
+            </p>
+            <button
+              onClick={() => setActiveStep((prev) => prev - 1)}
+              className="mt-6 px-4 py-2 bg-[#E82F3C] text-white rounded-md hover:bg-red-700 transition"
+            >
+              Go Back to Selection
+            </button>
+          </div>
+        )}
       </div>
 
-      {userData && (
-        <>
-          <h3 className="font-bold text-lg text-gray-900">
-            User Data <span className="text-[#E82F3C]">*</span>:
-          </h3>
-
-          <div className="p-2 rounded-md  mt-3">
-            <Table
-              scroll={{ x: "max-content" }}
-              columns={user_columns}
-              dataSource={[userData] || []}
-            />
-          </div>
-        </>
+      {selectedBanels?.length > 0 && (
+        <button
+          onClick={() => {
+            setOpenUserModal(true);
+          }}
+          className="mt-4 bg-[#E82F3C] ms-auto w-fit text-white p-2 rounded-md hover:bg-red-700 transition"
+        >
+          Submit
+        </button>
       )}
 
-      <button
-        onClick={handleSubmit}
-        className="mt-4 bg-(--main-red-color) ms-auto w-fit text-white p-2 rounded-md"
-      >
-        Submit
-      </button>
+      <UserForm open={openUserModal} setActiveStep={setActiveStep} activeStep={activeStep}  setOpen={setOpenUserModal}/>
     </div>
   );
 }

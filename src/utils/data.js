@@ -1345,26 +1345,11 @@ export const GLOSS_LEVEL = [
     }
 ]
 
-export const FINISH = [
-    {
-        id:1,
-        label:"Solid Tone",
-        value:"solid_tone"
-    },
+export const SPECIAL_FINISH = [
     {
         id:2,
         label:"Transparent",
         value:"transparent"
-    },
-    {
-        id:3,
-        label:"Melatic",
-        value:"melatic"
-    },
-    {
-        id:4,
-        label:"Texture",
-        value:"texture"
     },
     {
         id:5,
@@ -1377,15 +1362,43 @@ export const FINISH = [
         value:"vein",
     },
     {
-        id:7,
-        label:"RAL",
-        value:"ral"
-    },
-    {
         id:8,
         label:"Wrinkle",
         value:"wrinkle"
-    }
+    },
+    {
+        id:1,
+        label:"Solid Tone",
+        value:"solid_tone"
+    },
+    {
+        id:3,
+        label:"Melatic",
+        value:"melatic"
+    },
+    {
+        id:4,
+        label:"Texture",
+        value:"texture"
+    },
+]
+
+export const RAL_FINISH = [
+    {
+        id:1,
+        label:"Solid Tone",
+        value:"solid_tone"
+    },
+    {
+        id:3,
+        label:"Melatic",
+        value:"melatic"
+    },
+    {
+        id:4,
+        label:"Texture",
+        value:"texture"
+    },
 ]
 
 export const POWDER_TYPES = [
