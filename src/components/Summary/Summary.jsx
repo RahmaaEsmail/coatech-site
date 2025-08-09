@@ -193,9 +193,9 @@ export default function Summary({ activeStep, setActiveStep }) {
         ) : (
           <div className="flex flex-col items-center justify-center py-12 px-4 bg-gray-50 rounded-lg">
             <FaBoxOpen className="text-6xl text-gray-400 mb-4" />
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">No Banels Selected</h3>
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">No Colors Selected</h3>
             <p className="text-gray-500 text-center max-w-md">
-              You haven't selected any banels yet. Please go back and select some banels to proceed with your quotation.
+              You haven’t chosen any colors yet. Please go back and select your colors to generate a quotation.
             </p>
             <button
               onClick={() => setActiveStep((prev) => prev - 1)}
@@ -218,7 +218,7 @@ export default function Summary({ activeStep, setActiveStep }) {
         </button>
       )}
 
-      <UserForm open={openUserModal} setActiveStep={setActiveStep} activeStep={activeStep}  setOpen={setOpenUserModal}/>
+      <UserForm open={openUserModal} setActiveStep={setActiveStep} activeStep={activeStep} setOpen={setOpenUserModal} />
     </div>
   );
 }
