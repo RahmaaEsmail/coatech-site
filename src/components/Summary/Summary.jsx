@@ -36,7 +36,7 @@ export default function Summary({ activeStep, setActiveStep }) {
     {
       dataIndex: "img",
       key: "img",
-      title: "Banel Image",
+      title: "Color",
       render: (row) => (
         <img
           src={row}
@@ -169,7 +169,7 @@ export default function Summary({ activeStep, setActiveStep }) {
     <div className="flex flex-col gap-4 my-6">
       <div className="flex justify-between items-center">
         <h3 className="font-bold text-lg text-gray-900">
-          Choosed Bannel <span className="text-[#E82F3C]">*</span>:
+        Selected Colors <span className="text-[#E82F3C]">*</span>:
         </h3>
 
         <div className="flex items-center gap-2">
